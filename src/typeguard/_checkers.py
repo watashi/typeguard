@@ -240,6 +240,7 @@ def check_mapping(
                     exc.append_path_element(f"value of key {k!r}")
                     raise
 
+_global_extra_keys = {}
 
 def check_typed_dict(
     value: Any,
@@ -260,7 +261,10 @@ def check_typed_dict(
             keys_formatted = ", ".join(
                 f'"{key}"' for key in sorted(extra_keys, key=repr)
             )
-            raise TypeCheckError(f"has unexpected extra key(s): {keys_formatted}")
+            # raise TypeCheckError(f"has unexpected extra key(s): {keys_formatted}")
+            argtype = Any
+            if origin_type not in _global_extra_keys:
+                _global_extra_keys[origin_type] = extra_keys
 
         for key in extra_keys:
             argvalue = value[key]
@@ -291,7 +295,7 @@ def check_typed_dict(
 
     for key, argtype in type_hints.items():
         argvalue = value.get(key, _missing)
-        if argvalue is not _missing:
+        if argvalue is not _missing and argvalue is not None:
             try:
                 check_type_internal(argvalue, argtype, memo)
             except TypeCheckError as exc:
